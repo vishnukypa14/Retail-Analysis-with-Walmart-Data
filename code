@@ -1,0 +1,319 @@
+import pandas as pd 
+from scipy.stats import variation
+import matplotlib.pyplot as plt
+%matplotlib inline
+walmart_data = pd.read_csv('Data/Walmart_Store_sales.csv')
+walmart_data
+
+            Store	Date	Weekly_Sales	Holiday_Flag	Temperature	Fuel_Price	CPI	Unemployment
+            0	1	05-02-2010	1643690.90	0	42.31	2.572	211.096358	8.106
+            1	1	12-02-2010	1641957.44	1	38.51	2.548	211.242170	8.106
+            2	1	19-02-2010	1611968.17	0	39.93	2.514	211.289143	8.106
+            3	1	26-02-2010	1409727.59	0	46.63	2.561	211.319643	8.106
+            4	1	05-03-2010	1554806.68	0	46.50	2.625	211.350143	8.106
+            ...	...	...	...	...	...	...	...	...
+            6430	45	28-09-2012	713173.95	0	64.88	3.997	192.013558	8.684
+            6431	45	05-10-2012	733455.07	0	64.89	3.985	192.170412	8.667
+            6432	45	12-10-2012	734464.36	0	54.47	4.000	192.327265	8.667
+            6433	45	19-10-2012	718125.53	0	56.47	3.969	192.330854	8.667
+            6434	45	26-10-2012	760281.43	0	58.85	3.882	192.308899	8.667
+            6435 rows × 8 columns
+
+walmart_data.info()
+            <class 'pandas.core.frame.DataFrame'>
+            RangeIndex: 6435 entries, 0 to 6434
+            Data columns (total 8 columns):
+             #   Column        Non-Null Count  Dtype  
+            ---  ------        --------------  -----  
+             0   Store         6435 non-null   int64  
+             1   Date          6435 non-null   object 
+             2   Weekly_Sales  6435 non-null   float64
+             3   Holiday_Flag  6435 non-null   int64  
+             4   Temperature   6435 non-null   float64
+             5   Fuel_Price    6435 non-null   float64
+             6   CPI           6435 non-null   float64
+             7   Unemployment  6435 non-null   float64
+            dtypes: float64(5), int64(2), object(1)
+            memory usage: 402.3+ KB
+ walmart_data['Date']
+            0       05-02-2010
+            1       12-02-2010
+            2       19-02-2010
+            3       26-02-2010
+            4       05-03-2010
+                       ...    
+            6430    28-09-2012
+            6431    05-10-2012
+            6432    12-10-2012
+            6433    19-10-2012
+            6434    26-10-2012
+            Name: Date, Length: 6435, dtype: object
+            
+1.Which store has maximum sales?
+walmart_data_maxsales = walmart_data.groupby('Store')['Weekly_Sales'].sum()  #we use groupby function for the group the stores and added all weeklysales in each store using sum()
+walmart_data_maxsales
+print("Store no {} has the maximum sales of {}".format(walmart_data_maxsales.idxmax(),walmart_data_maxsales.max()))
+
+            Store no 20 has the maximum sales of 301397792.46000004
+            
+2.Which store has maximum standard deviation i.e., the sales vary a lot. Also, find out the coefficient of mean to standard deviation
+walmart_data_maxstd = walmart_data.groupby('Store')['Weekly_Sales'].std()
+walmart_data_maxstd
+print("Store {} has maximum standard Deviation of {}".format(walmart_data_maxstd.idxmax(), walmart_data_maxstd.max()))
+
+            Store 14 has maximum standard Deviation of 317569.9494755081
+            
+coefficient_of_STDto_mean = variation(walmart_data.Weekly_Sales)
+print ("coefficient of mean to standard deviation is ",coefficient_of_STDto_mean)
+
+            coefficient of mean to standard deviation is  0.5390083097474861
+            
+3 . Which store/s has good quarterly growth rate in Q3’2012
+walmart_data['Date'] = pd.to_datetime(walmart_data['Date'])
+#defining the start and end date of Q3 and Q2
+Q3_date_from = pd.to_datetime('01-07-2012')
+Q3_date_to = pd.to_datetime('30-09-2012')
+Q2_date_from = pd.to_datetime('01-04-2012')
+Q2_date_to = pd.to_datetime('30-06-2012')
+#Collecting the data of Q3 and Q2 from original dataset.
+Q2data=walmart_data[(walmart_data['Date'] > Q2_date_from) & (walmart_data['Date'] < Q2_date_to)]
+Q3data=walmart_data[(walmart_data['Date'] > Q3_date_from) & (walmart_data['Date'] < Q3_date_to)]
+#finding the sum weekly sales of each store in Q2
+Q2 = pd.DataFrame(Q2data.groupby('Store')['Weekly_Sales'].sum())
+Q2.reset_index(inplace=True)
+Q2.rename(columns={'Weekly_Sales': 'Q2_Weekly_Sales'},inplace=True)
+#finding the sum weekly sales of each store in Q2
+Q3 = pd.DataFrame(Q3data.groupby('Store')['Weekly_Sales'].sum())
+Q3.reset_index(inplace=True)
+Q3.rename(columns={'Weekly_Sales': 'Q3_Weekly_Sales'},inplace=True)
+#mergeing Q2 and Q3 data on Store as a common column
+Q3_Growth= Q2.merge(Q3,how='inner',on='Store')
+Q3_Growth
+
+                Store	Q2_Weekly_Sales	Q3_Weekly_Sales
+                0	1	39988063.27	56996795.67
+                1	2	47629070.24	68115845.48
+                2	3	10520103.97	15054331.37
+                3	4	54043493.01	77516251.42
+                4	5	8340091.82	11860845.90
+                5	6	38920058.40	55580158.13
+                6	7	14829946.03	21553844.93
+                7	8	22768291.61	32720990.75
+                8	9	14054562.38	19999153.35
+                9	10	45974809.47	65376694.44
+                10	11	34081526.41	48814294.15
+                11	12	25460760.75	36256924.05
+                12	13	50144112.76	72428675.72
+                13	14	46653392.59	64744337.50
+                14	15	14454018.54	20699421.65
+                15	16	12608669.10	18517668.28
+                16	17	23257339.74	33852423.84
+                17	18	25971400.40	37360608.42
+                18	19	34220784.38	49414392.40
+                19	20	52192485.09	74715296.61
+                20	21	17757893.93	25465962.09
+                21	22	24754491.93	35470178.89
+                22	23	33424118.61	49051628.63
+                23	24	32825590.54	47483868.21
+                24	25	16999927.56	24614602.05
+                25	26	24315000.55	35716722.87
+                26	27	41698865.82	59989465.33
+                27	28	32603470.86	46413649.58
+                28	29	12956726.29	18508336.01
+                29	30	10983805.87	15738759.13
+                30	31	35002903.11	50052715.28
+                31	32	28999055.37	41983662.42
+                32	33	6582406.07	9498347.41
+                33	34	24391980.49	34891177.03
+                34	35	19877002.86	29196930.02
+                35	36	7883052.89	11155170.94
+                36	37	13197743.24	18916455.47
+                37	38	10881966.20	15575684.14
+                38	39	37788653.51	55048131.91
+                39	40	23727366.43	34337563.53
+                40	41	32365291.09	47363988.17
+                41	42	14555833.58	20864719.66
+                42	43	15821698.97	22593346.38
+                43	44	8143903.88	11840978.95
+                44	45	19352334.72	27366432.41
+#Calculating Growth rate of each Store and collecting it into a dataframe  
+Q3_Growth['Growth_Rate'] =(Q3_Growth['Q3_Weekly_Sales'] - Q3_Growth['Q2_Weekly_Sales'])/Q3_Growth['Q2_Weekly_Sales']
+Q3_Growth
+Q3_Growth.sort_values('Growth_Rate',ascending=False).head(1)
+                Store	Q2_Weekly_Sales	Q3_Weekly_Sales	Growth_Rate
+                25	26	24315000.55	35716722.87	0.468917
+ 
+4 .Some holidays have a negative impact on sales. Find out holidays which have higher sales than the mean sales in non-holiday season for all stores together
+ 
+# avg sales on holiday and non holiday of all store together 
+print(round(walmart_data.groupby('Holiday_Flag')['Weekly_Sales'].mean(),2))  
+
+# Stores Holiday Sales
+stores_holiday_sales = walmart_data[walmart_data['Holiday_Flag'] == 1]
+
+# Stores Weekday Sales
+stores_nonholiday_sales = walmart_data[walmart_data['Holiday_Flag'] == 0]
+
+#Stores Sales in Super Bowl Day 
+#Super Bowl: 12-Feb-10, 11-Feb-11, 10-Feb-12, 8-Feb-13
+
+stores_holiday_sales_superBowl = stores_holiday_sales[(pd.to_datetime(stores_holiday_sales['Date']) == 
+pd.to_datetime('12-02-2010')) |(pd.to_datetime(stores_holiday_sales['Date']) == 
+pd.to_datetime('11-02-2011'))|(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('10-02-2012'))|
+(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('08-02-2013'))]
+
+#Stores Sales in Labour Day 
+#Labour Day: 10-Sep-10, 9-Sep-11, 7-Sep-12, 6-Sep-13
+stores_holiday_sales_labourDay = stores_holiday_sales[(pd.to_datetime(stores_holiday_sales['Date']) ==
+pd.to_datetime('10-09-2010')) |(pd.to_datetime(stores_holiday_sales['Date']) == 
+pd.to_datetime('09-09-2011'))|(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('07-09-2012'))|
+(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('06-09-2013'))]
+
+#Stores Sales in Thanks Giving 
+#Thanksgiving: 26-Nov-10, 25-Nov-11, 23-Nov-12, 29-Nov-13
+
+stores_holiday_sales_thanksgiving = stores_holiday_sales[(pd.to_datetime(stores_holiday_sales['Date']) == 
+pd.to_datetime('26-11-2010')) |(pd.to_datetime(stores_holiday_sales['Date']) ==
+pd.to_datetime('25-11-2011'))|(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('23-11-2012'))|
+(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('29-11-2013'))]
+
+#Stores Sales in Christmas
+# Christmas: 31-Dec-10, 30-Dec-11, 28-Dec-12, 27-Dec-13
+
+stores_holiday_sales_Christmas = stores_holiday_sales[(pd.to_datetime(stores_holiday_sales['Date']) ==
+pd.to_datetime('31-12-2010')) |(pd.to_datetime(stores_holiday_sales['Date']) ==
+pd.to_datetime('30-12-2011'))|(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('28-12-2012'))|
+(pd.to_datetime(stores_holiday_sales['Date']) == pd.to_datetime('27-12-2013'))]
+
+
+print("Super Bowl Day Sale",stores_holiday_sales_superBowl['Weekly_Sales'].mean())
+print("Labour Day Sale",stores_holiday_sales_labourDay['Weekly_Sales'].mean())
+print("Thanksgiving Day Sale",stores_holiday_sales_thanksgiving['Weekly_Sales'].mean())
+print("Christmas Day Sale",stores_holiday_sales_Christmas['Weekly_Sales'].mean())
+                        Holiday_Flag
+                        0    1041256.38
+                        1    1122887.89
+                        Name: Weekly_Sales, dtype: float64
+                        Super Bowl Day Sale 1079127.9877037033
+                        Labour Day Sale 1042427.2939259257
+                        Thanksgiving Day Sale 1471273.427777778
+                        Christmas Day Sale 960833.1115555551
+                        From above result we can see that christmas day sales are less than mean of non -holiday sales
+
+                        CHRISTMAS DAY have a negative impact on sales
+
+5. Provide a monthly and semester view of sales in units and give insights`
+#Monthly sales 
+monthly = walmart_data.groupby(pd.Grouper(key='Date', freq='1M')).sum()# groupby each 1 month
+monthly=monthly.reset_index()
+fig, ax = plt.subplots(figsize=(10,8))
+X = monthly['Date']
+Y = monthly['Weekly_Sales']
+plt.plot(X,Y)
+plt.title('Month Wise Sales')
+plt.xlabel('Monthly')
+plt.ylabel('Weekly_Sales')
+
+#Semester Sales 
+Semester = walmart_data.groupby(pd.Grouper(key='Date', freq='6M')).sum()
+Semester = Semester.reset_index()
+fig, ax = plt.subplots(figsize=(10,8))
+X = Semester['Date']
+Y = Semester['Weekly_Sales']
+plt.plot(X,Y)
+plt.title('Semester Wise Sales')
+plt.xlabel('Semester')
+plt.ylabel('Weekly_Sales')
+Text(0, 0.5, 'Weekly_Sales')
+
+
+From the first chart We can observe Monthly Sales Graph that highest sum of sales is recorded in between jan-2011 to march-2011
+
+From Second chart We can Observe Semester Sales graph that at beginning of 1st sem of 2010 and 1st sem of 2013 sales are lowest
+
+statistical model :
+For Store 1 – Build prediction models to forecast demand
+
+Linear Regression – Utilize variables like date and restructure dates as 1 for 5 Feb 2010 (starting from the earliest date in order). Hypothesize if CPI, unemployment, and fuel price have any impact on sales.
+
+from math import sqrt
+from sklearn.metrics import r2_score,mean_squared_error
+Store1_data = walmart_data[walmart_data['Store'] == 1][['Weekly_Sales','CPI','Unemployment','Fuel_Price']]
+Store1_data['Date'] = Store1_data.index +1
+
+                        Store1_data
+                        Weekly_Sales	CPI	Unemployment	Fuel_Price	Date
+                        0	1643690.90	211.096358	8.106	2.572	1
+                        1	1641957.44	211.242170	8.106	2.548	2
+                        2	1611968.17	211.289143	8.106	2.514	3
+                        3	1409727.59	211.319643	8.106	2.561	4
+                        4	1554806.68	211.350143	8.106	2.625	5
+                        ...	...	...	...	...	...
+                        138	1437059.26	222.981658	6.908	3.666	139
+                        139	1670785.97	223.181477	6.573	3.617	140
+                        140	1573072.81	223.381296	6.573	3.601	141
+                        141	1508068.77	223.425723	6.573	3.594	142
+                        142	1493659.74	223.444251	6.573	3.506	143
+                        143 rows × 5 columns
+
+fig,axs = plt.subplots(1,3, sharey = True )
+Store1_data.plot(kind ='scatter', x='CPI',y='Weekly_Sales',ax=axs[0], figsize=(16,8))
+Store1_data.plot(kind ='scatter', x='Unemployment',y='Weekly_Sales',ax=axs[1])
+Store1_data.plot(kind ='scatter', x='Fuel_Price',y='Weekly_Sales',ax=axs[2])
+                    <matplotlib.axes._subplots.AxesSubplot at 0x10db8c620a0>
+
+
+
+# Create Features & Target variables.
+x= Store1_data[['CPI','Unemployment','Fuel_Price']]
+y= Store1_data['Weekly_Sales']
+
+#import LinearRegression from Sklearn package
+from sklearn.linear_model import LinearRegression
+lm = LinearRegression()
+lm.fit(x,y)  #fitting feature(x), target (y) variables into LinearRegression model
+            LinearRegression()
+            
+#printing  intercept & Coefficient 
+print(lm.intercept_) 
+print(lm.coef_)
+            -3887095.772343983
+            [ 21791.71895906 124063.65641864 -64838.31315855]
+            
+#predict the data with predict function
+prediction = lm.predict(x)
+
+pd.DataFrame({"Actual test " : y , "Predict data:": prediction}).round(2)
+
+                Actual test	Predict data:
+                0	1643690.90	1551952.60
+                1	1641957.44	1556686.20
+                2	1611968.17	1559914.33
+                3	1409727.59	1557531.58
+                4	1554806.68	1554046.57
+                ...	...	...
+                138	1437059.26	1591392.33
+                139	1670785.97	1557362.49
+                140	1573072.81	1562754.31
+                141	1508068.77	1564176.31
+                142	1493659.74	1570285.84
+                143 rows × 2 columns
+
+    Above Table shows the actual sales and predicted sales
+
+#by using statsmodels we can find the pvalues so that we can accept or reject the HYPOTHESIS
+
+import statsmodels.formula.api as smf
+lr = smf.ols(formula ='Weekly_Sales~CPI + Unemployment + Fuel_Price',data =Store1_data).fit()
+lr.pvalues
+
+                Intercept       0.027107
+                CPI             0.001640
+                Unemployment    0.036592
+                Fuel_Price      0.168513
+                dtype: float64
+                From the above p values : CPI ,Unemployment as significant values.
+
+so that CPI ,Unemployment has some impact on sales
+
+whereas Fuel_Price has no effect on sales.
